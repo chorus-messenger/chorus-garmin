@@ -2,6 +2,7 @@ import Toybox.Communications;
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.System;
+import Toybox.Timer;
 import Toybox.WatchUi;
 
 //! Die letzten Nachrichten eines Chats, neueste unten. Wischen/Tasten scrollen, Tippen öffnet die Antworten.
@@ -18,6 +19,10 @@ class ChatView extends WatchUi.View {
     private var _loading as Boolean = false;
     private var _font as Graphics.FontDefinition = Graphics.FONT_SMALL;
     private var _top as Number = 0;
+    private var _timer as Timer.Timer? = null;
+    private var _polls as Number = 0;
+    private var _polling as Boolean = false;
+    private var _keepY as Number = -1;
     // Vorschaubilder je Nachrichten-ID
     private const THUMB = 170;
     private var _thumbs as Dictionary = {};
@@ -35,6 +40,19 @@ class ChatView extends WatchUi.View {
     public function onShow() as Void {
         if (msgs == null && !_loading) {
             reload();
+        }
+    }
+
+    public function poll() as Void {
+        if (!_loading) {
+            _polling = true;
+            reload();
+        }
+    }
+
+    public function onHide() as Void {
+        if (_timer != null) {
+            (_timer as Timer.Timer).stop();
         }
     }
 
@@ -61,7 +79,20 @@ class ChatView extends WatchUi.View {
         }
         msgs = data.get("msgs") as Array<Dictionary>;
         _blocks = null; // beim nächsten Zeichnen neu umbrechen, ans Ende springen
+        _keepY = _polling ? _y : -1;
         WatchUi.requestUpdate();
+        // Server transkribiert noch Sprachnachrichten: in 4 s nochmal holen (höchstens 8-mal)
+        var tp = data.get("tp");
+        if (tp instanceof Number && tp > 0 && _polls < 8) {
+            _polls++;
+            if (_timer == null) {
+                _timer = new Timer.Timer();
+            }
+            (_timer as Timer.Timer).start(method(:poll), 4000, false);
+        } else {
+            _polls = 0;
+        }
+        _polling = false;
         loadThumbs();
     }
 
@@ -132,8 +163,12 @@ class ChatView extends WatchUi.View {
         }
         _blocks = blocks;
         _total = total;
-        // Unten (neueste Nachricht) anfangen
+        // Unten (neueste Nachricht) anfangen; beim stillen Nachladen Position behalten
         _y = maxY();
+        if (_keepY >= 0 && _keepY < _y) {
+            _y = _keepY;
+        }
+        _keepY = -1;
     }
 
     private function maxY() as Number {
