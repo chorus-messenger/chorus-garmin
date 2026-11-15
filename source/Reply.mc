@@ -28,6 +28,13 @@ class RepliesLoader {
         }
         var texts = [] as Array<String>;
         var menu = new WatchUi.Menu2({ :title => Ui.str(Rez.Strings.Replies) });
+        var photos = _chat.photos();
+        for (var i = 0; i < photos.size(); i++) {
+            var p = photos[i];
+            var from = p.get("from") as String;
+            var when = Ui.when(p.get("ts") as Number);
+            menu.addItem(new WatchUi.MenuItem(Ui.str(p.get("vid") != null ? Rez.Strings.ShowVideo : Rez.Strings.ShowPhoto), from.length() > 0 ? from + " · " + when : when, p, null));
+        }
         var ai = data.get("ai") as Array<String>;
         for (var i = 0; i < ai.size(); i++) {
             menu.addItem(new WatchUi.MenuItem(ai[i], Ui.str(Rez.Strings.AiTag), texts.size(), null));
@@ -37,13 +44,6 @@ class RepliesLoader {
         for (var i = 0; i < fixed.size(); i++) {
             menu.addItem(new WatchUi.MenuItem(fixed[i], null, texts.size(), null));
             texts.add(fixed[i]);
-        }
-        var photos = _chat.photos();
-        for (var i = 0; i < photos.size(); i++) {
-            var p = photos[i];
-            var from = p.get("from") as String;
-            var when = Ui.when(p.get("ts") as Number);
-            menu.addItem(new WatchUi.MenuItem(Ui.str(p.get("vid") != null ? Rez.Strings.ShowVideo : Rez.Strings.ShowPhoto), from.length() > 0 ? from + " · " + when : when, p, null));
         }
         var voice = _chat.voiceWithoutText();
         if (voice != null) {
