@@ -22,4 +22,10 @@
     <string id="TapRetry">Tippen: nochmal</string>
     <string id="TapReply">Tippen: Antworten</string>
     <string id="Unpair">Uhr entkoppeln</string>
+    <string id="FontSize">Schriftgröße</string>
+    <string id="FontXSmall">Sehr klein</string>
+    <string id="FontSmall">Klein</string>
+    <string id="FontMedium">Mittel</string>
+    <string id="FontLarge">Groß</string>
+    <string id="FontXLarge">Sehr groß</string>
 </strings>

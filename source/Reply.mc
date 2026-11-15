@@ -144,8 +144,9 @@ class SendView extends WatchUi.View {
         dc.clear();
         var w = dc.getWidth();
         var h = dc.getHeight();
-        var t = Graphics.fitTextToArea(text, Graphics.FONT_SMALL, w * 0.74, h * 0.55, true);
-        dc.drawText(w / 2, h * 0.45, Graphics.FONT_SMALL, t == null ? text : t, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        var font = Ui.textFont();
+        var t = Graphics.fitTextToArea(text, font, w * 0.74, h * 0.55, true);
+        dc.drawText(w / 2, h * 0.45, font, t == null ? text : t, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(0x4FA3E0, Graphics.COLOR_TRANSPARENT);
         dc.drawText(w / 2, h * 0.8, Graphics.FONT_XTINY, Ui.str(Rez.Strings.SendHint), Graphics.TEXT_JUSTIFY_CENTER);
     }

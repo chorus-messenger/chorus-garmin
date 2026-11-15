@@ -15,6 +15,7 @@ class ChatView extends WatchUi.View {
     private var _y as Number = 0;
     private var _h as Number = 0;
     private var _loading as Boolean = false;
+    private var _font as Graphics.FontDefinition = Graphics.FONT_SMALL;
     // Abstand zwischen Nachrichten und zwischen Kopfzeile und Text
     private const GAP = 30;
     private const GAP_HEAD = 4;
@@ -96,7 +97,9 @@ class ChatView extends WatchUi.View {
         var list = msgs as Array<Dictionary>;
         var blocks = [] as Array<Array>;
         var total = 0;
-        var lineH = dc.getFontHeight(Graphics.FONT_SMALL);
+        var font = Ui.textFont();
+        _font = font;
+        var lineH = dc.getFontHeight(font);
         var headH = dc.getFontHeight(Graphics.FONT_XTINY);
         for (var i = 0; i < list.size(); i++) {
             var m = list[i];
@@ -106,12 +109,12 @@ class ChatView extends WatchUi.View {
                 head = from + " · " + head;
             }
             var text = m.get("text") as String;
-            var wrapped = Graphics.fitTextToArea(text, Graphics.FONT_SMALL, w, lineH * 30, true);
+            var wrapped = Graphics.fitTextToArea(text, font, w, lineH * 30, true);
             if (wrapped == null) {
                 wrapped = text;
             }
             // Echte Höhe des umbrochenen Texts statt Zeilen zählen (Zeilenabstand ist größer als die Schrifthöhe)
-            var textH = dc.getTextDimensions(wrapped as String, Graphics.FONT_SMALL)[1];
+            var textH = dc.getTextDimensions(wrapped as String, font)[1];
             var h = headH + GAP_HEAD + textH + GAP;
             blocks.add([head, wrapped, m.get("me") == true, h]);
             total += h;
@@ -160,7 +163,7 @@ class ChatView extends WatchUi.View {
                     dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(x, y, Graphics.FONT_XTINY, b[0] as String, just);
                     dc.setColor(mine ? 0x7CC4F5 : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(x, y + headH + GAP_HEAD, Graphics.FONT_SMALL, b[1] as String, just);
+                    dc.drawText(x, y + headH + GAP_HEAD, _font, b[1] as String, just);
                 }
                 y += h;
             }

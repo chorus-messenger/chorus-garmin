@@ -1,3 +1,4 @@
+import Toybox.Application;
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Time;
@@ -8,6 +9,27 @@ import Toybox.WatchUi;
 module Ui {
     function str(id as ResourceId) as String {
         return WatchUi.loadResource(id) as String;
+    }
+
+    //! Schriftgröße für Nachrichtentexte (auf der Uhr in der Chatliste umstellbar), 5 Stufen, Standard Mittel
+    const FONTS = [Graphics.FONT_XTINY, Graphics.FONT_TINY, Graphics.FONT_SMALL, Graphics.FONT_MEDIUM, Graphics.FONT_LARGE];
+
+    function fontSize() as Number {
+        var v = Application.Storage.getValue("font2");
+        return v instanceof Number && v >= 0 && v < FONTS.size() ? v : 2;
+    }
+
+    function setFontSize(v as Number) as Void {
+        Application.Storage.setValue("font2", v);
+    }
+
+    function textFont() as Graphics.FontDefinition {
+        return FONTS[fontSize()] as Graphics.FontDefinition;
+    }
+
+    function fontName() as String {
+        var names = [Rez.Strings.FontXSmall, Rez.Strings.FontSmall, Rez.Strings.FontMedium, Rez.Strings.FontLarge, Rez.Strings.FontXLarge];
+        return str(names[fontSize()] as ResourceId);
     }
 
     function toast(text as String) as Void {

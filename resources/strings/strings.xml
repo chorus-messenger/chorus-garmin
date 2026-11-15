@@ -22,4 +22,10 @@
     <string id="TapRetry">Tap to retry</string>
     <string id="TapReply">Tap to reply</string>
     <string id="Unpair">Unpair watch</string>
+    <string id="FontSize">Font size</string>
+    <string id="FontXSmall">Extra small</string>
+    <string id="FontSmall">Small</string>
+    <string id="FontMedium">Medium</string>
+    <string id="FontLarge">Large</string>
+    <string id="FontXLarge">Extra large</string>
 </strings>

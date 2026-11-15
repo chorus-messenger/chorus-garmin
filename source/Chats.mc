@@ -38,6 +38,7 @@ class ChatsLoader {
             menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.NoChats), null, :none, null));
         }
         menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.Refresh), null, :refresh, null));
+        menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.FontSize), Ui.fontName(), :font, null));
         menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.Unpair), null, :unpair, null));
         WatchUi.switchToView(menu, new ChatsDelegate(), WatchUi.SLIDE_IMMEDIATE);
         nextAvatar();
@@ -132,6 +133,10 @@ class ChatsDelegate extends WatchUi.Menu2InputDelegate {
             var info = new InfoView(Ui.str(Rez.Strings.Loading), null);
             WatchUi.switchToView(info, new InfoDelegate(info), WatchUi.SLIDE_IMMEDIATE);
             new ChatsLoader().start();
+        } else if (id == :font) {
+            Ui.setFontSize((Ui.fontSize() + 1) % Ui.FONTS.size());
+            item.setSubLabel(Ui.fontName());
+            WatchUi.requestUpdate();
         } else if (id == :unpair) {
             Api.setToken(null);
             var pair = new PairView();
