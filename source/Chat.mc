@@ -16,6 +16,7 @@ class ChatView extends WatchUi.View {
     private var _h as Number = 0;
     private var _loading as Boolean = false;
     private var _font as Graphics.FontDefinition = Graphics.FONT_SMALL;
+    private var _top as Number = 0;
     // Abstand zwischen Nachrichten und zwischen Kopfzeile und Text
     private const GAP = 30;
     private const GAP_HEAD = 4;
@@ -108,6 +109,9 @@ class ChatView extends WatchUi.View {
             if (from.length() > 0) {
                 head = from + " · " + head;
             }
+            if (m.get("u") instanceof String) {
+                head = head + " · " + Ui.str(m.get("vid") != null ? Rez.Strings.TapVideo : Rez.Strings.TapPhoto);
+            }
             var text = m.get("text") as String;
             var wrapped = Graphics.fitTextToArea(text, font, w, lineH * 30, true);
             if (wrapped == null) {
@@ -116,7 +120,7 @@ class ChatView extends WatchUi.View {
             // Echte Höhe des umbrochenen Texts statt Zeilen zählen (Zeilenabstand ist größer als die Schrifthöhe)
             var textH = dc.getTextDimensions(wrapped as String, font)[1];
             var h = headH + GAP_HEAD + textH + GAP;
-            blocks.add([head, wrapped, m.get("me") == true, h]);
+            blocks.add([head, wrapped, m.get("me") == true, h, i]);
             total += h;
         }
         _blocks = blocks;
@@ -153,6 +157,7 @@ class ChatView extends WatchUi.View {
             var x1 = w - x0;
             var headH = dc.getFontHeight(Graphics.FONT_XTINY);
             var y = top - _y;
+            _top = y;
             for (var i = 0; i < blocks.size(); i++) {
                 var b = blocks[i];
                 var h = b[3] as Number;
@@ -174,6 +179,23 @@ class ChatView extends WatchUi.View {
         dc.setColor(0x4FA3E0, Graphics.COLOR_TRANSPARENT);
         var name = Graphics.fitTextToArea(title, Graphics.FONT_XTINY, w * 0.5, dc.getFontHeight(Graphics.FONT_XTINY), true);
         dc.drawText(w / 2, top - 8 - dc.getFontHeight(Graphics.FONT_XTINY), Graphics.FONT_XTINY, name == null ? "" : name, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    //! Nachricht an Bildschirmhöhe y (für Antippen von Fotos), sonst null
+    public function messageAt(y as Number) as Dictionary? {
+        if (_blocks == null || msgs == null) {
+            return null;
+        }
+        var blocks = _blocks as Array<Array>;
+        var t = _top;
+        for (var i = 0; i < blocks.size(); i++) {
+            var h = blocks[i][3] as Number;
+            if (y >= t && y < t + h) {
+                return (msgs as Array<Dictionary>)[blocks[i][4] as Number];
+            }
+            t += h;
+        }
+        return null;
     }
 
     public function failed() as Boolean {
@@ -241,6 +263,20 @@ class ChatDelegate extends WatchUi.BehaviorDelegate {
         }
         new RepliesLoader(_view).start();
         return true;
+    }
+
+    //! Foto/Video antippen öffnet es groß, sonst wie Auswählen (Antworten)
+    public function onTap(e as WatchUi.ClickEvent) as Boolean {
+        if (dragged()) {
+            return true;
+        }
+        var m = _view.messageAt(e.getCoordinates()[1]);
+        if (m != null && m.get("u") instanceof String) {
+            var v = new PhotoView(m.get("u") as String, m.get("vid") != null);
+            WatchUi.pushView(v, new PhotoDelegate(), WatchUi.SLIDE_UP);
+            return true;
+        }
+        return onSelect();
     }
 
     public function onMenu() as Boolean {
