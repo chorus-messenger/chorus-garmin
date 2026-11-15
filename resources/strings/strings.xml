@@ -1,0 +1,25 @@
+<strings>
+    <string id="AppName">Chorus</string>
+    <string id="Loading">Loading …</string>
+    <string id="Chats">Chats</string>
+    <string id="Refresh">Refresh</string>
+    <string id="Replies">Reply</string>
+    <string id="AiTag">AI suggestion</string>
+    <string id="Transcribe">Transcribe voice message</string>
+    <string id="Transcribing">Transcribing …</string>
+    <string id="MarkRead">Mark as read</string>
+    <string id="Read">Marked as read</string>
+    <string id="SendHint">Tap to send</string>
+    <string id="Sending">Sending …</string>
+    <string id="Sent">Sent</string>
+    <string id="NoChats">No chats</string>
+    <string id="NoMessages">No messages</string>
+    <string id="PairTitle">Pair watch</string>
+    <string id="PairHint">In Chorus: Settings > Garmin watch, enter this code</string>
+    <string id="ErrPhone">No connection to the phone</string>
+    <string id="ErrServer">Server error</string>
+    <string id="Unpaired">Watch is no longer paired</string>
+    <string id="TapRetry">Tap to retry</string>
+    <string id="TapReply">Tap to reply</string>
+    <string id="Unpair">Unpair watch</string>
+</strings>

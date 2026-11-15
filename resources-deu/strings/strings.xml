@@ -1,0 +1,25 @@
+<strings>
+    <string id="AppName">Chorus</string>
+    <string id="Loading">Lädt …</string>
+    <string id="Chats">Chats</string>
+    <string id="Refresh">Aktualisieren</string>
+    <string id="Replies">Antworten</string>
+    <string id="AiTag">KI-Vorschlag</string>
+    <string id="Transcribe">Sprachnachricht transkribieren</string>
+    <string id="Transcribing">Transkribiere …</string>
+    <string id="MarkRead">Als gelesen markieren</string>
+    <string id="Read">Als gelesen markiert</string>
+    <string id="SendHint">Tippen zum Senden</string>
+    <string id="Sending">Sende …</string>
+    <string id="Sent">Gesendet</string>
+    <string id="NoChats">Keine Chats</string>
+    <string id="NoMessages">Keine Nachrichten</string>
+    <string id="PairTitle">Uhr koppeln</string>
+    <string id="PairHint">In Chorus: Einstellungen > Garmin-Uhr, diesen Code eingeben</string>
+    <string id="ErrPhone">Keine Verbindung zum Handy</string>
+    <string id="ErrServer">Serverfehler</string>
+    <string id="Unpaired">Uhr ist nicht mehr gekoppelt</string>
+    <string id="TapRetry">Tippen: nochmal</string>
+    <string id="TapReply">Tippen: Antworten</string>
+    <string id="Unpair">Uhr entkoppeln</string>
+</strings>
