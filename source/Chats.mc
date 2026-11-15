@@ -1,3 +1,4 @@
+import Toybox.Application;
 import Toybox.Communications;
 import Toybox.Graphics;
 import Toybox.Lang;
@@ -28,9 +29,14 @@ class ChatsLoader {
             var sub = p instanceof String && p.length() > 0 ? p : Ui.when(c.get("ts") as Number);
             var av = new Avatar(title, c.get("n") as String);
             var url = c.get("a");
-            if (url instanceof String) {
-                av.url = url;
-                _avatars.add(av);
+            var ver = c.get("av");
+            if (url instanceof String && ver instanceof String) {
+                av.key = "av" + ver;
+                av.bmp = AvatarCache.get(av.key);
+                if (av.bmp == null) {
+                    av.url = url;
+                    _avatars.add(av);
+                }
             }
             menu.addItem(new WatchUi.IconMenuItem(label, sub, c.get("id") as String, av, null));
         }
@@ -64,7 +70,9 @@ class ChatsLoader {
     public function onAvatar(code as Number, data as WatchUi.BitmapResource or Graphics.BitmapReference or Null) as Void {
         if (_next < _avatars.size()) {
             if (code == 200 && data != null) {
-                _avatars[_next].bmp = data;
+                var av = _avatars[_next];
+                av.bmp = data;
+                AvatarCache.put(av.key, data);
                 WatchUi.requestUpdate();
             }
             _next++;
@@ -77,6 +85,7 @@ class ChatsLoader {
 class Avatar extends WatchUi.Drawable {
     public static const SIZE = 60;
     public var url as String? = null;
+    public var key as String = "";
     public var bmp as WatchUi.BitmapResource or Graphics.BitmapReference or Null = null;
     private var _letter as String;
     private var _color as Number;
@@ -144,6 +153,42 @@ class ChatsDelegate extends WatchUi.Menu2InputDelegate {
         } else if (id instanceof String) {
             var view = new ChatView(id, item.getLabel());
             WatchUi.pushView(view, new ChatDelegate(view), WatchUi.SLIDE_LEFT);
+        }
+    }
+}
+
+//! Profilbilder dauerhaft auf der Uhr: Schlüssel enthält die Bildversion vom Server, also neu laden nur bei Änderung.
+//! Höchstens 40 Bilder (je ca. 7 KB), die ältesten fliegen raus.
+module AvatarCache {
+    const MAX = 40;
+
+    function get(key as String) as WatchUi.BitmapResource? {
+        try {
+            var v = Application.Storage.getValue(key);
+            return v instanceof WatchUi.BitmapResource ? v : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function put(key as String, data as WatchUi.BitmapResource or Graphics.BitmapReference) as Void {
+        var bmp = data instanceof Graphics.BitmapReference ? (data as Graphics.BitmapReference).get() : data;
+        if (!(bmp instanceof WatchUi.BitmapResource)) {
+            return;
+        }
+        try {
+            var keys = Application.Storage.getValue("avKeys");
+            var list = keys instanceof Array ? keys as Array<String> : [] as Array<String>;
+            list.remove(key);
+            list.add(key);
+            while (list.size() > MAX) {
+                Application.Storage.deleteValue(list[0]);
+                list = list.slice(1, null);
+            }
+            Application.Storage.setValue(key, bmp);
+            Application.Storage.setValue("avKeys", list);
+        } catch (e) {
+            // Speicher voll o. Ä.: dann eben beim nächsten Mal wieder laden
         }
     }
 }
