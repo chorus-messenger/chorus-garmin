@@ -1,3 +1,5 @@
+import Toybox.Communications;
+import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.WatchUi;
 
@@ -24,7 +26,13 @@ class ChatsLoader {
             var label = unread > 0 ? unread.toString() + " · " + title : title;
             var p = c.get("p");
             var sub = p instanceof String && p.length() > 0 ? p : Ui.when(c.get("ts") as Number);
-            menu.addItem(new WatchUi.MenuItem(label, sub, c.get("id") as String, null));
+            var av = new Avatar(title, c.get("n") as String);
+            var url = c.get("a");
+            if (url instanceof String) {
+                av.url = url;
+                _avatars.add(av);
+            }
+            menu.addItem(new WatchUi.IconMenuItem(label, sub, c.get("id") as String, av, null));
         }
         if (chats.size() == 0) {
             menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.NoChats), null, :none, null));
@@ -32,6 +40,84 @@ class ChatsLoader {
         menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.Refresh), null, :refresh, null));
         menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.Unpair), null, :unpair, null));
         WatchUi.switchToView(menu, new ChatsDelegate(), WatchUi.SLIDE_IMMEDIATE);
+        nextAvatar();
+    }
+
+    //! Profilbilder nacheinander laden (die Uhr verträgt nur wenige gleichzeitige Anfragen)
+    private var _avatars as Array<Avatar> = [] as Array<Avatar>;
+    private var _next as Number = 0;
+
+    public function nextAvatar() as Void {
+        if (_next >= _avatars.size()) {
+            _avatars = [] as Array<Avatar>;
+            return;
+        }
+        var url = _avatars[_next].url as String;
+        Communications.makeImageRequest(Api.server() + url, null, {
+            :maxWidth => Avatar.SIZE,
+            :maxHeight => Avatar.SIZE,
+            :dithering => Communications.IMAGE_DITHERING_NONE
+        }, method(:onAvatar));
+    }
+
+    public function onAvatar(code as Number, data as WatchUi.BitmapResource or Graphics.BitmapReference or Null) as Void {
+        if (_next < _avatars.size()) {
+            if (code == 200 && data != null) {
+                _avatars[_next].bmp = data;
+                WatchUi.requestUpdate();
+            }
+            _next++;
+        }
+        nextAvatar();
+    }
+}
+
+//! Rundes Profilbild in der Chatliste; ohne Bild ein farbiger Kreis mit Anfangsbuchstaben
+class Avatar extends WatchUi.Drawable {
+    public static const SIZE = 60;
+    public var url as String? = null;
+    public var bmp as WatchUi.BitmapResource or Graphics.BitmapReference or Null = null;
+    private var _letter as String;
+    private var _color as Number;
+
+    public function initialize(title as String, network as String) {
+        Drawable.initialize({});
+        _letter = title.length() > 0 ? title.substring(0, 1).toUpper() : "?";
+        _color = network.equals("whatsapp") ? 0x1F8F55 : network.equals("signal") ? 0x3A76F0 : network.equals("telegram") ? 0x2A9BD6 : network.equals("email") ? 0x8A6FD1 : 0x4FA3E0;
+    }
+
+    public function draw(dc as Graphics.Dc) as Void {
+        var w = dc.getWidth();
+        var h = dc.getHeight();
+        var d = (w < h ? w : h) - 4;
+        if (d > SIZE) {
+            d = SIZE;
+        }
+        var r = d / 2;
+        var cx = w / 2;
+        var cy = h / 2;
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
+        if (bmp != null) {
+            var b = bmp;
+            var bw = b.getWidth();
+            var bh = b.getHeight();
+            if ((bw != d || bh != d) && dc has :drawScaledBitmap) {
+                dc.drawScaledBitmap(cx - r, cy - r, d, d, b);
+            } else {
+                dc.drawBitmap(cx - bw / 2, cy - bh / 2, b);
+            }
+            // Ecken schwarz übermalen, damit das Bild rund wirkt
+            var pen = (r * 0.5).toNumber() + 2;
+            dc.setPenWidth(pen);
+            dc.drawCircle(cx, cy, r + pen / 2);
+            dc.setPenWidth(1);
+        } else {
+            dc.setColor(_color, Graphics.COLOR_TRANSPARENT);
+            dc.fillCircle(cx, cy, r);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, cy, Graphics.FONT_SMALL, _letter, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
     }
 }
 

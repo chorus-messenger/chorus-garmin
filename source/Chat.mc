@@ -1,5 +1,6 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.System;
 import Toybox.WatchUi;
 
 //! Die letzten Nachrichten eines Chats, neueste unten. Wischen/Tasten scrollen, Tippen öffnet die Antworten.
@@ -14,6 +15,9 @@ class ChatView extends WatchUi.View {
     private var _y as Number = 0;
     private var _h as Number = 0;
     private var _loading as Boolean = false;
+    // Abstand zwischen Nachrichten und zwischen Kopfzeile und Text
+    private const GAP = 30;
+    private const GAP_HEAD = 4;
 
     public function initialize(id as String, title as String) {
         View.initialize();
@@ -69,15 +73,18 @@ class ChatView extends WatchUi.View {
     }
 
     public function scroll(dy as Number) as Void {
-        var max = _total - _h / 2;
-        _y += dy;
-        if (_y > max) {
-            _y = max;
+        var y = _y + dy;
+        var max = maxY();
+        if (y > max) {
+            y = max;
         }
-        if (_y < 0) {
-            _y = 0;
+        if (y < 0) {
+            y = 0;
         }
-        WatchUi.requestUpdate();
+        if (y != _y) {
+            _y = y;
+            WatchUi.requestUpdate();
+        }
     }
 
     public function page() as Number {
@@ -85,7 +92,7 @@ class ChatView extends WatchUi.View {
     }
 
     private function layout(dc as Graphics.Dc) as Void {
-        var w = (dc.getWidth() * 0.72).toNumber();
+        var w = (dc.getWidth() * 0.68).toNumber();
         var list = msgs as Array<Dictionary>;
         var blocks = [] as Array<Array>;
         var total = 0;
@@ -103,25 +110,22 @@ class ChatView extends WatchUi.View {
             if (wrapped == null) {
                 wrapped = text;
             }
-            var lines = 1;
-            var s = wrapped as String;
-            var idx = s.find("\n");
-            while (idx != null) {
-                lines++;
-                s = s.substring(idx + 1, s.length()) as String;
-                idx = s.find("\n");
-            }
-            var h = headH + lines * lineH + 14;
+            // Echte Höhe des umbrochenen Texts statt Zeilen zählen (Zeilenabstand ist größer als die Schrifthöhe)
+            var textH = dc.getTextDimensions(wrapped as String, Graphics.FONT_SMALL)[1];
+            var h = headH + GAP_HEAD + textH + GAP;
             blocks.add([head, wrapped, m.get("me") == true, h]);
             total += h;
         }
         _blocks = blocks;
         _total = total;
         // Unten (neueste Nachricht) anfangen
-        _y = total - (_h * 0.62).toNumber();
-        if (_y < 0) {
-            _y = 0;
-        }
+        _y = maxY();
+    }
+
+    private function maxY() as Number {
+        // Letzte Nachricht endet etwas über dem unteren Rand (runder Bildschirm)
+        var m = _total - (_h * 0.62).toNumber();
+        return m < 0 ? 0 : m;
     }
 
     public function onUpdate(dc as Graphics.Dc) as Void {
@@ -142,7 +146,7 @@ class ChatView extends WatchUi.View {
             if (blocks.size() == 0) {
                 dc.drawText(w / 2, _h / 2, Graphics.FONT_SMALL, Ui.str(Rez.Strings.NoMessages), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             }
-            var x0 = (w * 0.14).toNumber();
+            var x0 = (w * 0.16).toNumber();
             var x1 = w - x0;
             var headH = dc.getFontHeight(Graphics.FONT_XTINY);
             var y = top - _y;
@@ -156,7 +160,7 @@ class ChatView extends WatchUi.View {
                     dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(x, y, Graphics.FONT_XTINY, b[0] as String, just);
                     dc.setColor(mine ? 0x7CC4F5 : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(x, y + headH, Graphics.FONT_SMALL, b[1] as String, just);
+                    dc.drawText(x, y + headH + GAP_HEAD, Graphics.FONT_SMALL, b[1] as String, just);
                 }
                 y += h;
             }
@@ -182,17 +186,49 @@ class ChatDelegate extends WatchUi.BehaviorDelegate {
         _view = view;
     }
 
+    // Ziehen mit dem Finger: Verlauf folgt direkt dem Finger. Das Wischen, das das System danach
+    // zusätzlich meldet, wird dann ignoriert, sonst springt der Verlauf noch eine Seite weiter.
+    private var _dragY as Number? = null;
+    private var _dragAt as Number = 0;
+
+    public function onDrag(e as WatchUi.DragEvent) as Boolean {
+        var y = e.getCoordinates()[1];
+        var t = e.getType();
+        if (t == WatchUi.DRAG_TYPE_START) {
+            _dragY = y;
+        } else if (_dragY != null) {
+            var dy = (_dragY as Number) - y;
+            if (dy != 0) {
+                _view.scroll(dy);
+                _dragAt = System.getTimer();
+            }
+            _dragY = t == WatchUi.DRAG_TYPE_STOP ? null : y;
+        }
+        return true;
+    }
+
+    private function dragged() as Boolean {
+        return System.getTimer() - _dragAt < 500;
+    }
+
     public function onNextPage() as Boolean {
-        _view.scroll(_view.page());
+        if (!dragged()) {
+            _view.scroll(_view.page());
+        }
         return true;
     }
 
     public function onPreviousPage() as Boolean {
-        _view.scroll(-_view.page());
+        if (!dragged()) {
+            _view.scroll(-_view.page());
+        }
         return true;
     }
 
     public function onSelect() as Boolean {
+        if (dragged()) {
+            return true;
+        }
         if (_view.failed()) {
             _view.reload();
             return true;
