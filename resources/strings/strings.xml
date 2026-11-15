@@ -28,7 +28,9 @@
     <string id="FontMedium">Medium</string>
     <string id="FontLarge">Large</string>
     <string id="FontXLarge">Extra large</string>
-    <string id="TapPhoto">tap for photo</string>
-    <string id="TapVideo">tap for video</string>
+    <string id="TapPhoto">(tap)</string>
+    <string id="TapVideo">(tap)</string>
     <string id="VideoPhone">Play video on the phone</string>
+    <string id="ShowPhoto">View photo</string>
+    <string id="ShowVideo">Watch video still</string>
 </strings>

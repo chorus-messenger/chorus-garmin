@@ -28,7 +28,9 @@
     <string id="FontMedium">Mittel</string>
     <string id="FontLarge">Groß</string>
     <string id="FontXLarge">Sehr groß</string>
-    <string id="TapPhoto">Foto antippen</string>
-    <string id="TapVideo">Video antippen</string>
+    <string id="TapPhoto">(antippen)</string>
+    <string id="TapVideo">(antippen)</string>
     <string id="VideoPhone">Video am Handy abspielen</string>
+    <string id="ShowPhoto">Foto ansehen</string>
+    <string id="ShowVideo">Video-Standbild ansehen</string>
 </strings>

@@ -38,6 +38,13 @@ class RepliesLoader {
             menu.addItem(new WatchUi.MenuItem(fixed[i], null, texts.size(), null));
             texts.add(fixed[i]);
         }
+        var photos = _chat.photos();
+        for (var i = 0; i < photos.size(); i++) {
+            var p = photos[i];
+            var from = p.get("from") as String;
+            var when = Ui.when(p.get("ts") as Number);
+            menu.addItem(new WatchUi.MenuItem(Ui.str(p.get("vid") != null ? Rez.Strings.ShowVideo : Rez.Strings.ShowPhoto), from.length() > 0 ? from + " · " + when : when, p, null));
+        }
         var voice = _chat.voiceWithoutText();
         if (voice != null) {
             menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.Transcribe), null, :transcribe, null));
@@ -66,6 +73,9 @@ class RepliesDelegate extends WatchUi.Menu2InputDelegate {
             // Erst ganzen Text zeigen, Senden mit zweitem Tippen (gegen versehentliches Antippen)
             var view = new SendView(_texts[id]);
             WatchUi.pushView(view, new SendDelegate(view, _chat), WatchUi.SLIDE_LEFT);
+        } else if (id instanceof Dictionary) {
+            var v = new PhotoView(id.get("u") as String, id.get("vid") != null);
+            WatchUi.pushView(v, new PhotoDelegate(), WatchUi.SLIDE_UP);
         } else if (id == :transcribe && _voice != null) {
             new Action(_chat, "/api/w/transcribe", { "id" => _voice }, Ui.str(Rez.Strings.Transcribing), null).start();
         } else if (id == :read) {

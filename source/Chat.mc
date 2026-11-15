@@ -109,10 +109,10 @@ class ChatView extends WatchUi.View {
             if (from.length() > 0) {
                 head = from + " · " + head;
             }
-            if (m.get("u") instanceof String) {
-                head = head + " · " + Ui.str(m.get("vid") != null ? Rez.Strings.TapVideo : Rez.Strings.TapPhoto);
-            }
             var text = m.get("text") as String;
+            if (m.get("u") instanceof String) {
+                text = text + "\n" + Ui.str(m.get("vid") != null ? Rez.Strings.TapVideo : Rez.Strings.TapPhoto);
+            }
             var wrapped = Graphics.fitTextToArea(text, font, w, lineH * 30, true);
             if (wrapped == null) {
                 wrapped = text;
@@ -181,6 +181,21 @@ class ChatView extends WatchUi.View {
         dc.drawText(w / 2, top - 8 - dc.getFontHeight(Graphics.FONT_XTINY), Graphics.FONT_XTINY, name == null ? "" : name, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
+    //! Nachrichten mit Foto/Video, neueste zuerst (höchstens 3, fürs Antwortmenü)
+    public function photos() as Array<Dictionary> {
+        var out = [] as Array<Dictionary>;
+        if (msgs == null) {
+            return out;
+        }
+        var list = msgs as Array<Dictionary>;
+        for (var i = list.size() - 1; i >= 0 && out.size() < 3; i--) {
+            if (list[i].get("u") instanceof String) {
+                out.add(list[i]);
+            }
+        }
+        return out;
+    }
+
     //! Nachricht an Bildschirmhöhe y (für Antippen von Fotos), sonst null
     public function messageAt(y as Number) as Dictionary? {
         if (_blocks == null || msgs == null) {
@@ -215,21 +230,27 @@ class ChatDelegate extends WatchUi.BehaviorDelegate {
     // zusätzlich meldet, wird dann ignoriert, sonst springt der Verlauf noch eine Seite weiter.
     private var _dragY as Number? = null;
     private var _dragAt as Number = 0;
+    private var _moved as Number = 0;
 
     public function onDrag(e as WatchUi.DragEvent) as Boolean {
         var y = e.getCoordinates()[1];
         var t = e.getType();
         if (t == WatchUi.DRAG_TYPE_START) {
             _dragY = y;
+            _moved = 0;
         } else if (_dragY != null) {
             var dy = (_dragY as Number) - y;
-            if (dy != 0) {
+            _moved += dy.abs();
+            // Kleines Zittern beim Antippen ist kein Ziehen, sonst gehen Tipps verloren
+            if (dy != 0 && _moved > 12) {
                 _view.scroll(dy);
                 _dragAt = System.getTimer();
             }
-            _dragY = t == WatchUi.DRAG_TYPE_STOP ? null : y;
+            if (_moved > 12 || t == WatchUi.DRAG_TYPE_STOP) {
+                _dragY = t == WatchUi.DRAG_TYPE_STOP ? null : y;
+            }
         }
-        return true;
+        return false;
     }
 
     private function dragged() as Boolean {
