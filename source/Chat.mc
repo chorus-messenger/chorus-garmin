@@ -150,12 +150,12 @@ class ChatView extends WatchUi.View {
                 var b = blocks[i];
                 var h = b[3] as Number;
                 if (y + h > 0 && y < _h) {
-                    var me = b[2] as Boolean;
-                    var x = me ? x1 : x0;
-                    var just = me ? Graphics.TEXT_JUSTIFY_RIGHT : Graphics.TEXT_JUSTIFY_LEFT;
+                    var mine = b[2] as Boolean;
+                    var x = mine ? x1 : x0;
+                    var just = mine ? Graphics.TEXT_JUSTIFY_RIGHT : Graphics.TEXT_JUSTIFY_LEFT;
                     dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(x, y, Graphics.FONT_XTINY, b[0] as String, just);
-                    dc.setColor(me ? 0x7CC4F5 : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(mine ? 0x7CC4F5 : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(x, y + headH, Graphics.FONT_SMALL, b[1] as String, just);
                 }
                 y += h;

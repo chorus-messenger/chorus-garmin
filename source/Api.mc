@@ -38,7 +38,7 @@ module Api {
     }
 
     function send(m as Communications.HttpRequestMethod, path as String, params as Dictionary?, cb as Method) as Void {
-        var headers = {} as Dictionary<String, String>;
+        var headers = {} as Dictionary<String, String or Communications.HttpRequestContentType>;
         if (m == Communications.HTTP_REQUEST_METHOD_POST) {
             headers.put("Content-Type", Communications.REQUEST_CONTENT_TYPE_JSON);
         }
