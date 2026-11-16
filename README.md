@@ -1,6 +1,6 @@
 # Chorus for Garmin watches
 
-A small Connect IQ watch app (Monkey C) for the Garmin Venu 3 / Venu 3S that talks to your [Chorus](https://github.com/chorus-messenger/chorus) server through the phone.
+A small Connect IQ watch app (Monkey C) for the Garmin Venu 3 / Venu 3S that talks to your [Chorus](https://github.com/chorus-messenger/chorus-web) server through the phone.
 
 - Chat list (archived chats and mailboxes are hidden unless you turn mail on)
 - Last messages of a chat, voice messages as transcript ("Transcribe" on the watch if there is none yet)
@@ -21,7 +21,7 @@ SERVER=https://chorus.example.org KEY=developer_key.der ./build.sh
 
 Copy `bin/chorus-venu3.prg` to `GARMIN/APPS` on the watch (USB; on a Mac use OpenMTP). Device files for `venu3` come from the Connect IQ SDK Manager (Garmin account needed).
 
-Watch endpoints on the server: `/api/w/*` (see [`server/src/watch.ts`](https://github.com/chorus-messenger/chorus/blob/main/server/src/watch.ts) in the Chorus repo).
+Watch endpoints on the server: `/api/w/*` (see [`server/src/watch.ts`](https://github.com/chorus-messenger/chorus-web/blob/main/server/src/watch.ts) in the Chorus repo).
 
 ## Releases
 
