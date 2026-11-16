@@ -43,7 +43,10 @@ class ChatsLoader {
         if (chats.size() == 0) {
             menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.NoChats), null, :none, null));
         }
-        menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.Refresh), null, :refresh, null));
+        // Unter „Aktualisieren“: wie viele Profilbilder gespeichert sind (und ggf. warum nicht)
+        var err = AvatarCache.lastError();
+        var info = AvatarCache.count().toString() + " " + Ui.str(Rez.Strings.AvatarsSaved) + (err != null ? " · " + err : "");
+        menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.Refresh), info, :refresh, null));
         menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.FontSize), Ui.fontName(), :font, null));
         menu.addItem(new WatchUi.MenuItem(Ui.str(Rez.Strings.Unpair), null, :unpair, null));
         WatchUi.switchToView(menu, new ChatsDelegate(), WatchUi.SLIDE_IMMEDIATE);
@@ -162,18 +165,42 @@ class ChatsDelegate extends WatchUi.Menu2InputDelegate {
 module AvatarCache {
     const MAX = 40;
 
-    function get(key as String) as WatchUi.BitmapResource? {
+    // Neuere Uhren geben gespeicherte Bilder als Verweis (BitmapReference) zurück, nicht als BitmapResource.
+    // Vorher wurde das als „nicht gespeichert“ gewertet und jedes Mal neu geladen.
+    function get(key as String) as WatchUi.BitmapResource or Graphics.BitmapReference or Null {
         try {
             var v = Application.Storage.getValue(key);
-            return v instanceof WatchUi.BitmapResource ? v : null;
+            if (v instanceof WatchUi.BitmapResource || v instanceof Graphics.BitmapReference) {
+                return v;
+            }
         } catch (e) {
-            return null;
+            note("get " + e.getErrorMessage());
         }
+        return null;
+    }
+
+    function count() as Number {
+        var keys = Application.Storage.getValue("avKeys");
+        return keys instanceof Array ? keys.size() : 0;
+    }
+
+    //! Letzten Fehler merken, damit man ihn in der Chatliste sehen kann
+    function note(msg as String?) as Void {
+        try {
+            Application.Storage.setValue("avErr", msg == null ? "?" : msg);
+        } catch (e) {
+        }
+    }
+
+    function lastError() as String? {
+        var v = Application.Storage.getValue("avErr");
+        return v instanceof String ? v : null;
     }
 
     function put(key as String, data as WatchUi.BitmapResource or Graphics.BitmapReference) as Void {
         var bmp = data instanceof Graphics.BitmapReference ? (data as Graphics.BitmapReference).get() : data;
-        if (!(bmp instanceof WatchUi.BitmapResource)) {
+        if (bmp == null) {
+            note("leer");
             return;
         }
         try {
@@ -188,7 +215,8 @@ module AvatarCache {
             Application.Storage.setValue(key, bmp);
             Application.Storage.setValue("avKeys", list);
         } catch (e) {
-            // Speicher voll o. Ä.: dann eben beim nächsten Mal wieder laden
+            // Speicher voll o. Ä.: dann eben beim nächsten Mal wieder laden, Grund merken
+            note("put " + e.getErrorMessage());
         }
     }
 }
